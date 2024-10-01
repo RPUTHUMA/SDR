@@ -1,30 +1,17 @@
 import os
 import json
-from groq import Groq
-
+import smtplib
 import pandas as pd
+from groq import Groq
+from email.mime.text import MIMEText
 
-def fetch_email_list(file_path):
-    ''' This function is used to fetch email id's from a list of the leads'''
-    try:
-        # Read Excel file
-        df = pd.read_excel(file_path)
-
-        # Iterate over rows
-        for index, row in df.iterrows():
-            name = row['Name']
-            email = row['Email Id']
-            return name, email
-    except FileNotFoundError:
-        print("File not found. Please check file path.")
-    except Exception as e:
-        print("An error occurred: ", str(e))
-
+# read this from config
+sender_details = {"sender_name": "Rakesh Nair", "sender_email": "puthugeorge@gmail.com"}
 
 def create_personalised_email(name, email, sender):
     ''' This function will help to create personalised email using given name and email id using llama3'''
 
-    os.environ["GROQ_API_KEY"]="use personal token"
+    os.environ["GROQ_API_KEY"]="replace with groq key"
     client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
     completion= client.chat.completions.create(
         messages=[
@@ -46,17 +33,45 @@ def create_personalised_email(name, email, sender):
     return message
 
 
-def send_email():
+def send_email(smtp_server, smtp_port, username, password, from_addr, to_addr, subject, body):
     '''function to send email'''
-    pass
+    try:
+        msg = MIMEText(body)
+        msg["Subject"] = subject
+        msg["From"] = from_addr
+        msg["To"] = to_addr
+
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(username, password)
+        server.send_message(msg)
+        server.quit()
+        print("Email Sent Successfully")
+    except Exception as e:
+        print("An error occurred: ", str(e))
 
 
+def fetch_email_list_and_mail(file_path):
+    ''' This function is used to fetch email id's from a list of the leads and send them customised email'''
+    try:
+        # Read Excel file
+        df = pd.read_excel(file_path)
 
+        # Iterate over rows
+        for index, row in df.iterrows():
+            name = row['Name']
+            email = row['Email Id']
+            email_content = create_personalised_email(name,email,sender_details)
+            send_email('smtp.gmail.com',587, sender_details["sender_email"], 'ReplaceWithAppPassword', sender_details["sender_email"], email,'Enhance Your Data Journey with FOSFOR - A Game-Changer from LTIMindtree',email_content)
+    except FileNotFoundError:
+        print("File not found. Please check file path.")
+    except Exception as e:
+        print("An error occurred: ", str(e))
 
 
 # Usage
 file_path = 'email_list.xlsx'  # Replace with your Excel file path
-name, email = fetch_email_list(file_path)
-sender_details = {"sender_name": "Rakesh Nair", "sender_email": "rakeshnair3390@gmail.com"}
-email_content = create_personalised_email(name,email,sender_details)
+fetch_email_list_and_mail(file_path)
+
+
 
