@@ -11,7 +11,7 @@ sender_details = {"sender_name": "Rakesh Nair", "sender_email": "puthugeorge@gma
 def create_personalised_email(name, email, sender):
     ''' This function will help to create personalised email using given name and email id using llama3'''
 
-    os.environ["GROQ_API_KEY"]="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"
+    os.environ["GROQ_API_KEY"]="Replace with groq key"
     client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
     completion= client.chat.completions.create(
         messages=[
@@ -62,7 +62,7 @@ def fetch_email_list_and_mail(file_path):
             name = row['Name']
             email = row['Email Id']
             email_content = create_personalised_email(name,email,sender_details)
-            send_email('smtp.gmail.com',587, sender_details["sender_email"], 'emhjalypcrhehmgs', sender_details["sender_email"], email,'Enhance Your Data Journey with FOSFOR - A Game-Changer from LTIMindtree',email_content)
+            send_email('smtp.gmail.com',587, sender_details["sender_email"], 'replace with app password', sender_details["sender_email"], email,'Enhance Your Data Journey with FOSFOR - A Game-Changer from LTIMindtree',email_content)
     except FileNotFoundError:
         print("File not found. Please check file path.")
     except Exception as e:
