@@ -1,36 +1,22 @@
 import streamlit as st
-from app_utils import *
+#from app_utils import * # to be used for groq
+from app_utils_local import *
 
 
 # Streamlit App
 
 # Initialize session state
-if "email_ids" not in st.session_state:
-    st.session_state.email_ids= ""
-
-if "names" not in st.session_state:
-    st.session_state.names = ""
-
-if "submitted_data" not in st.session_state:
-    st.session_state.submitted_data =[]
+if "leads_data" not in st.session_state:
+    st.session_state.leads_data= []
 
 st.title("Welcome To Your AI Assistant SDR")
-
-#use key arguments to reset text area
-email_ids_key = "email_ids_key"
-names_key = "names_key"
 
 # Create a sidebar for input
 st.sidebar.header("Please provide details of the leads")
 
 # Input for names
-st.sidebar.subheader("Enter names of the leads")
-st.session_state.names = st.sidebar.text_area("Enter comma-separated name:", key = names_key, height=100, placeholder="John Doe, Jane Smith, Bob Johnson", value=st.session_state.names)
-
-# Input for email IDs
-st.sidebar.subheader("Enter email id of the leads")
-st.session_state.email_ids = st.sidebar.text_area("Enter comma-separated email IDs:", key = email_ids_key, height=100, placeholder="john.doe@example.com, jane.smith@example.com, bob.johnson@example.com", value = st.session_state.email_ids)
-
+st.sidebar.subheader("Enter details of the leads (separated by newline)")
+lead_details = st.sidebar.text_area("Name, Email, Company, Linkedin Profile Url", height=200, placeholder="John Doe, johndoe@example.com, ABC Corp, https://www.linkedin.com/in/john-doe/\nJane Doe, janedoe@example.com, XYZ Inc, https://www.linkedin.com/in/jane-doe/")
 
 # Submit button
 submit_button = st.sidebar.button("Submit")
@@ -38,29 +24,32 @@ submit_button = st.sidebar.button("Submit")
 # Clear button
 clear_button = st.sidebar.button("Clear")
 
-# Function to process email IDs
-def process_email_ids(email_ids):
-    emaillist = [email.strip() for email in st.session_state.email_ids.split(",")]
-    return emaillist
-
-# Function to process names
-def process_names(names):
-    namelist = [name.strip() for name in st.session_state.names.split(",")]
-    return namelist
-
 # Main app content
 if submit_button:
     try:
-        # Process email IDs
-        email_list = process_email_ids(st.session_state.email_ids)
-
-        # Process names
-        name_list = process_names(st.session_state.names)
-
-        # Store input data in session state
-        st.session_state.submitted_data = list(zip(name_list, email_list))
-
-        fetch_email_list_and_mail(name_list, email_list)
+        # Split input into individual leads
+        leads = lead_details.split("\n")
+    
+        # Initialize empty list to store lead data
+        st.session_state.leads_data = []
+        
+        # Iterate over each lead
+        for lead in leads:
+            # Split lead data into name, email, company, linkedin
+            lead_data = lead.split(",")
+        
+            # Validate lead data
+            if len(lead_data) == 4:
+                # Append lead data to session state
+                st.session_state.leads_data.append({
+                    "Name": lead_data[0],
+                    "Email": lead_data[1],
+                    "Company": lead_data[2],
+                    "LinkedIn": lead_data[3]
+                })
+            else:
+                st.error("Invalid lead data format. Please use: Name, Email, Company, LinkedIn URL")
+        fetch_email_list_and_mail(st.session_state.leads_data)
 
     except Exception as e:
         st.error("An error occurred: " + str(e))
@@ -68,8 +57,4 @@ if submit_button:
 # Clear button
 if clear_button:
     # Clear session state values
-    st.session_state.email_ids = ""
-    st.session_state.names = ""
-    st.session_state.submitted_data = []
-    email_ids_key ="email_ids_key" + "_"
-    names_key = "names_key" +'_'
+    st.session_state.leads_data = []
